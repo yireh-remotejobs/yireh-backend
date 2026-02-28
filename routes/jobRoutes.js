@@ -1,3 +1,4 @@
+const protect = require("../middleware/authMiddleware");
 const express = require("express");
 const router = express.Router();
 const Job = require("../models/Job");
@@ -9,7 +10,7 @@ router.get("/", async (req, res) => {
 });
 
 // POST new job
-router.post("/", async (req, res) => {
+router.post("/", protect, async (req, res) => {
   const job = await Job.create(req.body);
   res.json(job);
 });
