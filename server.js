@@ -6,6 +6,7 @@ const cors = require("cors");
 
 const jobRoutes = require("./routes/jobRoutes");
 const internshipRoutes = require("./routes/internshipRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use(cors({
 // Routes
 app.use("/api/jobs", jobRoutes);
 app.use("/api/internships", internshipRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.get("/", (req, res) => {
   res.send("YIREH Backend Running");
