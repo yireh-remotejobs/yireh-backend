@@ -16,3 +16,7 @@ router.post("/", protect, async (req, res) => {
 });
 
 module.exports = router;
+router.get("/download-cv/:id", protect, async (req, res) => {
+  const app = await InternshipApplication.findById(req.params.id);
+  res.download(app.cv);
+});
