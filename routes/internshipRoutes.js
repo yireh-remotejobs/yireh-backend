@@ -1,17 +1,44 @@
 const express = require("express");
 const router = express.Router();
-const Internship = require("../models/Internship");
+const multer = require("multer");
 
-// GET all internships
-router.get("/", async (req, res) => {
-  const internships = await Internship.find().sort({ createdAt: -1 });
-  res.json(internships);
+const Internship = require("../models/Internship");
+const InternshipApplication = require("../models/InternshipApplication");
+const { sendToCompany } = require("../services/emailService");
+
+const storage = multer.diskStorage({
+  destination: "uploads/",
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
+  }
 });
 
-// POST new internship
-router.post("/", async (req, res) => {
-  const internship = await Internship.create(req.body);
-  res.json(internship);
+const upload = multer({ storage });
+
+router.post("/:id", upload.single("cv"), async (req, res) => {
+  try {
+    const { fullName, email } = req.body;
+
+    const internship = await Internship.findById(req.params.id);
+
+    const application = await InternshipApplication.create({
+      internship: internship._id,
+      fullName,
+      email,
+      cv: req.file.path
+    });
+
+    await sendToCompany(
+      internship.email,
+      { fullName, email },
+      req.file.path
+    );
+
+    res.json({ message: "Application submitted successfully" });
+
+  } catch (err) {
+    res.status(500).json({ message: "Error applying" });
+  }
 });
 
 module.exports = router;
