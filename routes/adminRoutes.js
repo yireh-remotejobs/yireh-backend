@@ -1,29 +1,41 @@
-const InternshipApplication = require("../models/InternshipApplication");
+const express = require("express");
+const router = express.Router();
+const protect = require("../middleware/protect");
+const Application = require("../models/Application");
+const { sendStatusEmail } = require("../services/emailService");
 
-// GET ALL APPLICATIONS
-router.get("/internship-applications", protect, async (req, res) => {
-  const apps = await InternshipApplication.find().populate("internship");
+// GET APPLICATIONS
+router.get("/applications", protect, async (req, res) => {
+  const apps = await Application.find()
+    .populate("job")
+    .populate("internship");
+
   res.json(apps);
 });
 
 // UPDATE STATUS
-router.put("/internship-application/:id", protect, async (req, res) => {
-  const { status } = req.body;
-
-  const app = await InternshipApplication.findByIdAndUpdate(
+router.put("/application/:id", protect, async (req, res) => {
+  const app = await Application.findByIdAndUpdate(
     req.params.id,
-    { status },
+    { status: req.body.status },
     { new: true }
   );
 
-  const { sendStatusEmail } = require("../services/emailService");
-  await sendStatusEmail(app.email, status);
+  await sendStatusEmail(app.email, req.body.status);
 
-  res.json({ message: "Status updated" });
+  res.json(app);
 });
 
 // DELETE
-router.delete("/internship-application/:id", protect, async (req, res) => {
-  await InternshipApplication.findByIdAndDelete(req.params.id);
+router.delete("/application/:id", protect, async (req, res) => {
+  await Application.findByIdAndDelete(req.params.id);
   res.json({ message: "Deleted" });
 });
+
+// DOWNLOAD CV
+router.get("/download/:id", protect, async (req, res) => {
+  const app = await Application.findById(req.params.id);
+  res.download(app.cv);
+});
+
+module.exports = router;
