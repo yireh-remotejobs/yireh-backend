@@ -8,27 +8,21 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// SEND TO COMPANY
-const sendToCompany = async (companyEmail, applicant, cvPath) => {
+exports.sendToCompany = async (to, applicant, cv) => {
   await transporter.sendMail({
     from: process.env.EMAIL_USER,
-    to: companyEmail,
-    subject: "New Internship Application",
-    text: `${applicant.fullName} applied.\nEmail: ${applicant.email}`,
-    attachments: [
-      { path: cvPath }
-    ]
+    to,
+    subject: "New Application",
+    text: `${applicant.fullName} applied (${applicant.email})`,
+    attachments: [{ path: cv }]
   });
 };
 
-// SEND RESPONSE TO CANDIDATE
-const sendStatusEmail = async (candidateEmail, status) => {
+exports.sendStatusEmail = async (to, status) => {
   await transporter.sendMail({
     from: process.env.EMAIL_USER,
-    to: candidateEmail,
+    to,
     subject: "Application Update",
     text: `Your application status: ${status}`
   });
 };
-
-module.exports = { sendToCompany, sendStatusEmail };
