@@ -1,11 +1,9 @@
 const jwt = require("jsonwebtoken");
 
-const protect = (req, res, next) => {
+module.exports = (req, res, next) => {
   const token = req.headers.authorization;
 
-  if (!token) {
-    return res.status(401).json({ message: "Not authorized" });
-  }
+  if (!token) return res.status(401).json({ message: "No token" });
 
   try {
     const decoded = jwt.verify(
@@ -15,9 +13,7 @@ const protect = (req, res, next) => {
 
     req.admin = decoded;
     next();
-  } catch (error) {
+  } catch {
     res.status(401).json({ message: "Invalid token" });
   }
 };
-
-module.exports = protect;
