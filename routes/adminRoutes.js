@@ -1,41 +1,32 @@
 const express = require("express");
 const router = express.Router();
-const protect = require("../middleware/protect");
-const Application = require("../models/Application");
-const { sendStatusEmail } = require("../services/emailService");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const Admin = require("../models/Admin");
 
-// GET APPLICATIONS
-router.get("/applications", protect, async (req, res) => {
-  const apps = await Application.find()
-    .populate("job")
-    .populate("internship");
+// REGISTER ADMIN (SAFE)
+router.post("/register", async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-  res.json(apps);
-});
+    // check if exists
+    const existing = await Admin.findOne({ email });
+    if (existing) {
+      return res.status(400).json({ message: "Admin already exists" });
+    }
 
-// UPDATE STATUS
-router.put("/application/:id", protect, async (req, res) => {
-  const app = await Application.findByIdAndUpdate(
-    req.params.id,
-    { status: req.body.status },
-    { new: true }
-  );
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-  await sendStatusEmail(app.email, req.body.status);
+    await Admin.create({
+      email,
+      password: hashedPassword
+    });
 
-  res.json(app);
-});
+    res.json({ message: "Admin created successfully" });
 
-// DELETE
-router.delete("/application/:id", protect, async (req, res) => {
-  await Application.findByIdAndDelete(req.params.id);
-  res.json({ message: "Deleted" });
-});
-
-// DOWNLOAD CV
-router.get("/download/:id", protect, async (req, res) => {
-  const app = await Application.findById(req.params.id);
-  res.download(app.cv);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
 module.exports = router;
