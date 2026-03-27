@@ -2,50 +2,35 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 
-const Application = require("../models/Application");
 const Job = require("../models/Job");
-const Internship = require("../models/Internship");
-const { sendToCompany } = require("../services/emailService");
+const sendEmail = require("../services/emailService");
 
-const storage = multer.diskStorage({
-  destination: "uploads/",
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
-  }
-});
-
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 // APPLY JOB
-router.post("/job/:id", upload.single("cv"), async (req, res) => {
-  const job = await Job.findById(req.params.id);
+router.post("/", upload.single("cv"), async (req, res) => {
+  try {
+    const { jobId, name, email } = req.body;
 
-  const app = await Application.create({
-    job: job._id,
-    fullName: req.body.fullName,
-    email: req.body.email,
-    cv: req.file.path
-  });
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
 
-  await sendToCompany(job.email, req.body, req.file.path);
+    await sendEmail(
+      job.email,
+      "New Job Application",
+      `New applicant:\n\nName: ${name}\nEmail: ${email}`,
+      req.file
+    );
 
-  res.json({ message: "Applied to job" });
-});
+    res.json({ message: "Application sent successfully ✅" });
 
-// APPLY INTERNSHIP
-router.post("/internship/:id", upload.single("cv"), async (req, res) => {
-  const item = await Internship.findById(req.params.id);
-
-  const app = await Application.create({
-    internship: item._id,
-    fullName: req.body.fullName,
-    email: req.body.email,
-    cv: req.file.path
-  });
-
-  await sendToCompany(item.email, req.body, req.file.path);
-
-  res.json({ message: "Applied to internship" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Error sending application" });
+  }
 });
 
 module.exports = router;
