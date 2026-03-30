@@ -20,7 +20,7 @@ const applyRoutes = require("./routes/applyRoutes");
 app.use("/api/jobs", jobRoutes);
 app.use("/api/internships", internshipRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/apply", applyRoutes);
+app.use("/api/apply", require("./routes/applyRoutes"));
 
 // ✅ TEST ROUTE
 app.get("/", (req, res) => {
