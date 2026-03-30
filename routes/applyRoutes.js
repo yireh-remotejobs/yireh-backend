@@ -1,31 +1,18 @@
 const express = require("express");
 const router = express.Router();
 const Application = require("../models/Application");
+const sendEmail = require("../services/emailService");
 
 router.post("/", async (req, res) => {
   try {
     const { jobId, name, email } = req.body;
 
+    // SAVE TO DATABASE
     await Application.create({
       job: jobId,
       fullName: name,
       email: email
     });
-
-    res.json({ message: "Application submitted successfully" });
-
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Error sending application" });
-  }
-});
-const sendEmail = require("../services/emailService");
-
-router.post("/", async (req,res)=>{
-  try{
-    const { jobId, name, email } = req.body;
-
-    await Application.create({ jobId, name, email });
 
     // SEND EMAIL
     await sendEmail(
@@ -34,11 +21,12 @@ router.post("/", async (req,res)=>{
       `New applicant:\nName: ${name}\nEmail: ${email}`
     );
 
-    res.json({ message:"Application submitted & email sent" });
+    res.json({ message: "Application submitted & email sent" });
 
-  }catch(err){
+  } catch (err) {
     console.log(err);
-    res.status(500).json({ message:"Server error" });
+    res.status(500).json({ message: "Error sending application" });
   }
 });
+
 module.exports = router;
