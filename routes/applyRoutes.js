@@ -1,34 +1,21 @@
 const express = require("express");
 const router = express.Router();
-const multer = require("multer");
+const Application = require("../models/Application");
 
-const Job = require("../models/Job");
-const sendEmail = require("../services/emailService");
-
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
-
-// APPLY JOB
-router.post("/", upload.single("cv"), async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const { jobId, name, email } = req.body;
 
-    const job = await Job.findById(jobId);
-    if (!job) {
-      return res.status(404).json({ message: "Job not found" });
-    }
+    await Application.create({
+      job: jobId,
+      fullName: name,
+      email: email
+    });
 
-    await sendEmail(
-      job.email,
-      "New Job Application",
-      `New applicant:\n\nName: ${name}\nEmail: ${email}`,
-      req.file
-    );
+    res.json({ message: "Application submitted successfully" });
 
-    res.json({ message: "Application sent successfully ✅" });
-
-  } catch (error) {
-    console.log(error);
+  } catch (err) {
+    console.log(err);
     res.status(500).json({ message: "Error sending application" });
   }
 });
