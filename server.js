@@ -1,42 +1,41 @@
-require("dotenv").config();
-
+// ===== IMPORTS =====
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+require("dotenv").config();
 
-// ✅ CREATE APP FIRST
+// ===== APP INIT =====
 const app = express();
 
-// ✅ THEN USE MIDDLEWARES
-app.use(express.json());
-app.use(cors({ origin: "*" }));
+// ===== MIDDLEWARE =====
+app.use(cors({
+  origin: process.env.CLIENT_URL || "*",
+}));
+app.use(express.json({ limit: "10mb" })); // for logo base64
 
-// ✅ ROUTES
+// ===== DB CONNECT =====
+mongoose.connect(process.env.MONGO_URI)
+.then(()=> console.log("MongoDB Connected"))
+.catch(err => console.log("DB Error:", err));
+
+// ===== ROUTES IMPORT =====
 const jobRoutes = require("./routes/jobRoutes");
-const internshipRoutes = require("./routes/internshipRoutes");
+const applyRoutes = require("./routes/applyRoutes");
 const adminRoutes = require("./routes/adminRoutes");
-const applyRoutes = require("./routes/applyRoutes");
 
+// ===== ROUTES USE =====
 app.use("/api/jobs", jobRoutes);
-app.use("/api/internships", internshipRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/apply", require("./routes/applyRoutes"));
-const applyRoutes = require("./routes/applyRoutes");
 app.use("/api/apply", applyRoutes);
+app.use("/api/admin", adminRoutes);
 
-// ✅ TEST ROUTE
-app.get("/", (req, res) => {
-  res.send("YIREH Backend Running");
+// ===== TEST ROUTE =====
+app.get("/", (req,res)=>{
+  res.send("API Running...");
 });
 
-// ✅ DATABASE
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected"))
-  .catch(err => console.log(err));
-
-// ✅ SERVER
+// ===== START SERVER =====
 const PORT = process.env.PORT || 10000;
 
-app.listen(PORT, () => {
+app.listen(PORT, ()=>{
   console.log(`Server running on port ${PORT}`);
 });
